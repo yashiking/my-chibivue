@@ -5,4 +5,5 @@ export type ComponentOptions = {
     ctx: { emit: (event: string, ...args: any[]) => void },
   ) => Function // ctx.emitを受け取れるように
   render?: Function
+  template?: string
 }

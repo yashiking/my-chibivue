@@ -1,12 +1,38 @@
 import { ComponentOptions } from './componentOptions'
 import {VNode, VNodeChild} from "./vnode";
 import {ReactiveEffect} from "chibivue";
-import {Props} from "./componentProps";
+import {initProps, Props} from "./componentProps";
 import {emit} from "./componentEmits";
 
 export type Component = ComponentOptions
 
 export type Data = Record<string, unknown>
+
+type CompileFunction = (template: string) => InternalRenderFunction
+let compile: CompileFunction | undefined
+
+export function registerRuntimeCompiler(_compile: any) {
+  compile = _compile
+}
+
+export const setupComponent = (instance: ComponentInternalInstance) => {
+  const { props } = instance.vnode
+  initProps(instance, props)
+
+  const component = instance.type as Component
+  if (component.setup) {
+    instance.render = component.setup(instance.props, {
+      emit: instance.emit,
+    }) as InternalRenderFunction
+  }
+
+  if (compile && !component.render) {
+    const template = component.template ?? ''
+    if (template) {
+      instance.render = compile(template)
+    }
+  }
+}
 
 export interface ComponentInternalInstance {
   type: Component // 元となるユーザー定義のコンポーネント (旧 rootComponent (実際にはルートコンポーネントだけじゃないけど))

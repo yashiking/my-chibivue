@@ -1,5 +1,11 @@
-import { ReactiveEffect } from '../reactivity'
-import {Component, ComponentInternalInstance, createComponentInstance, InternalRenderFunction} from './component'
+import {ReactiveEffect} from '../reactivity'
+import {
+  Component,
+  ComponentInternalInstance,
+  createComponentInstance,
+  InternalRenderFunction,
+  setupComponent
+} from './component'
 import {Text, VNode, normalizeVNode, createVNode} from './vnode'
 import {initProps, updateProps} from "./componentProps";
 
@@ -31,7 +37,8 @@ export interface RendererNode {
   [key: string]: any
 }
 
-export interface RendererElement extends RendererNode {}
+export interface RendererElement extends RendererNode {
+}
 
 export function createRenderer(options: RendererOptions) {
   const {
@@ -44,7 +51,7 @@ export function createRenderer(options: RendererOptions) {
   } = options
 
   const patch = (n1: VNode | null, n2: VNode, container: RendererElement) => {
-    const { type } = n2
+    const {type} = n2
     if (type === Text) {
       processText(n1, n2, container)
     } else if (typeof type === 'string') {
@@ -73,15 +80,7 @@ export function createRenderer(options: RendererOptions) {
     const instance: ComponentInternalInstance = (initialVNode.component =
       createComponentInstance(initialVNode))
 
-    const { props } = instance.vnode;
-    initProps(instance, props);
-
-    const component = initialVNode.type as Component
-    if (component.setup) {
-      instance.render = component.setup(instance.props, {
-        emit: instance.emit,
-      }) as InternalRenderFunction;
-    }
+    setupComponent(instance)
 
     setupRenderEffect(instance, initialVNode, container)
   }
@@ -92,7 +91,7 @@ export function createRenderer(options: RendererOptions) {
     container: RendererElement,
   ) => {
     const componentUpdateFn = () => {
-      const { render } = instance
+      const {render} = instance
 
       if (!instance.isMounted) {
         // mount process
@@ -102,7 +101,7 @@ export function createRenderer(options: RendererOptions) {
         instance.isMounted = true
       } else {
         // patch process
-        let { next, vnode } = instance
+        let {next, vnode} = instance
 
         if (next) {
           next.el = vnode.el
@@ -148,7 +147,7 @@ export function createRenderer(options: RendererOptions) {
 
   const mountElement = (vnode: VNode, container: RendererElement) => {
     let el: RendererElement
-    const { type, props } = vnode
+    const {type, props} = vnode
     el = vnode.el = hostCreateElement(type as string)
 
     mountChildren(vnode.children as VNode[], el)
@@ -213,5 +212,5 @@ export function createRenderer(options: RendererOptions) {
     patch(null, vnode, container)
   }
 
-  return { render }
+  return {render}
 }
