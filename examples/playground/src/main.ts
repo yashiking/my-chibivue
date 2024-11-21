@@ -1,25 +1,37 @@
 import { createApp, h, reactive } from 'chibivue'
+import {Component} from "../../../packages/runtime-core/component";
 
-const CounterComponent = {
-  setup() {
-    const state = reactive({ count: 0 })
-    const increment = () => state.count++
+const MyComponent: Component = {
+  props: { someMessage: { type: String } },
 
+  setup(props: any, { emit }: any) {
     return () =>
       h('div', {}, [
-        h('p', {}, [`count: ${state.count}`]),
-        h('button', { onClick: increment }, ['increment']),
+        h('p', {}, [`someMessage: ${props.someMessage}`]),
+        h('button', { onClick: () => emit('click:change-message') }, [
+          'change message',
+        ]),
       ])
   },
 }
 
 const app = createApp({
   setup() {
+    const state = reactive({ message: 'hello' })
+    const changeMessage = () => {
+      state.message += '!'
+    }
+
     return () =>
       h('div', { id: 'my-app' }, [
-        h(CounterComponent, {}, []),
-        h(CounterComponent, {}, []),
-        h(CounterComponent, {}, []),
+        h(
+          MyComponent,
+          {
+            'some-message': state.message,
+            'onClick:change-message': changeMessage,
+          },
+          [],
+        ),
       ])
   },
 })
